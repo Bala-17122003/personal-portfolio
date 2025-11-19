@@ -1,70 +1,1525 @@
-
 <!DOCTYPE html>
-<html lang-"en">
+<html lang="en">
 <head>
-  <title>BOMBARDINO CROCODILO</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelli-Grind Dashboard</title>
+    <!-- 1. Import Chart.js for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+    <style>
+        /* --- Base Setup & Variables --- */
+        :root {
+            --bg-dark-blue: #051021;
+            --bg-mid-blue: #0b2633;
+            --accent-cyan: #00eaff;
+            --accent-blue: #0078ff;
+            --accent-green: #00ff99;
+            --accent-red: #ff5c5c;
+            --accent-yellow: #f0f66e;
+            --text-primary: #e6f7ff;
+            --text-secondary: #9fd9ff;
+            --border-color: rgba(0, 234, 255, 0.2);
+            --card-bg: rgba(11, 38, 51, 0.5);
+            --card-bg-blur: rgba(11, 38, 51, 0.3);
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            --shadow-glow-cyan: rgba(0, 234, 255, 0.15);
+            --shadow-glow-red: rgba(255, 92, 92, 0.25);
+            --shadow-glow-yellow: rgba(240, 246, 110, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            background-color: var(--bg-dark-blue);
+            background-image: linear-gradient(135deg, var(--bg-dark-blue) 0%, var(--bg-mid-blue) 100%);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        /* --- Background Effects --- */
+        .glow-bg {
+            position: fixed;
+            left: -10%;
+            top: -10%;
+            width: 60vmax;
+            height: 60vmax;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 234, 255, 0.15), rgba(0, 120, 255, 0.05), transparent 70%);
+            filter: blur(80px);
+            z-index: 0;
+            animation: float 12s ease-in-out infinite alternate;
+        }
+
+        @keyframes float {
+            from { transform: translate(-5%, -5%) rotate(0deg); }
+            to { transform: translate(5%, 5%) rotate(20deg); }
+        }
+
+        /* --- Base Layout --- */
+        .shell {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 1400px;
+            margin: 28px auto;
+            padding: 18px;
+        }
+        
+        .card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(0,0,0,0.18);
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            margin-bottom: 1.5rem;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+
+        header.card {
+            margin-bottom: 14px;
+        }
+        
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar h1 {
+            color: var(--accent);
+            letter-spacing: 1px;
+            margin: 0;
+        }
+        
+        .sub {
+            color: #9fd9ff;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        
+        .btn, /* NEW generic button class */
+        .btn-logout {
+            padding: 0.6rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            background: transparent;
+            border: 1px solid var(--accent-cyan);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover,
+        .btn-logout:hover {
+            background: var(--accent-cyan);
+            color: var(--bg-dark-blue);
+            box-shadow: 0 0 15px var(--accent-cyan);
+        }
+        
+        .btn:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+             background: transparent;
+             color: var(--accent-cyan);
+             box-shadow: none;
+        }
+
+        /* --- Login Page --- */
+        .loginBox {
+            width: 100%;
+            max-width: 450px;
+            margin: 10vh auto; /* Adjusted margin */
+            border-radius: 14px;
+            padding: 22px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .login-input::placeholder {
+            color: var(--text-secondary);
+        }
+        
+        .login-button {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--bg-dark-blue);
+            background-image: linear-gradient(90deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .login-button:hover {
+            box-shadow: 0 0 20px var(--shadow-glow-cyan);
+            transform: translateY(-2px);
+        }
+        
+        .login-error {
+            color: var(--accent-red);
+            margin-top: 1rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        /* --- Page Content --- */
+        .page-header { /* NEW class for page titles + buttons */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .page-title {
+            font-size: 1.8rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            margin: 0; /* Removed margin-bottom */
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        /* Machine Tile (for 3-machine view) */
+        .machine-tile {
+            padding: 14px;
+            border-radius: 10px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(0,0,0,0.06));
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid rgba(0,0,0,0.22);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .machine-tile:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px var(--shadow-color), 0 0 20px var(--shadow-glow-cyan);
+            border-color: var(--accent-cyan);
+        }
+        
+        .machine-tile.tile-alert-red {
+            border-color: var(--accent-red);
+            animation: pulse-red 1.5s infinite;
+        }
+        .machine-tile.tile-alert-yellow {
+            border-color: var(--accent-yellow);
+            animation: pulse-yellow 1.5s infinite;
+        }
+        .machine-tile.tile-alert-grey {
+            border-color: var(--text-secondary);
+            opacity: 0.7;
+        }
+        
+        @keyframes pulse-red {
+            0% { box-shadow: 0 5px 20px var(--shadow-color), 0 0 0px var(--shadow-glow-red); }
+            50% { box-shadow: 0 5px 20px var(--shadow-color), 0 0 25px var(--shadow-glow-red); }
+            100% { box-shadow: 0 5px 20px var(--shadow-color), 0 0 0px var(--shadow-glow-red); }
+        }
+        @keyframes pulse-yellow {
+            0% { box-shadow: 0 5px 20px var(--shadow-color), 0 0 0px var(--shadow-glow-yellow); }
+            50% { box-shadow: 0 5px 20px var(--shadow-color), 0 0 25px var(--shadow-glow-yellow); }
+            100% { box-shadow: 0 5px 20px var(--shadow-color), 0 0 0px var(--shadow-glow-yellow); }
+        }
+
+        .machine-tile h3 {
+            margin: 0 0 1rem 0;
+            color: var(--accent);
+        }
+        
+        .kv {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            color: #9fd9ff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .kv .big {
+            font-weight: 800;
+            font-size: 18px;
+            color: var(--text-primary);
+        }
+        
+        /* Plant Tile (for Worker/P-User) */
+        .plant-tile {
+            background: rgba(255,255,255,0.06);
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            cursor: pointer;
+            padding: 2.5rem;
+            border: 1px solid rgba(0,0,0,0.22);
+        }
+        
+        .plant-tile:hover {
+            transform: translateY(-6px);
+            transition: transform .18s;
+            box-shadow: 0 10px 30px var(--shadow-color), 0 0 20px var(--shadow-glow-cyan);
+            border-color: var(--accent-cyan);
+        }
+        
+        .plant-tile h3 {
+            font-size: 2rem;
+            color: var(--accent-cyan);
+            margin: 0;
+        }
+        
+        /* Status Colors */
+        .status-ok { color: var(--accent-green); }
+        .status-warn { color: var(--accent-yellow); }
+        .status-bad { color: var(--accent-red); }
+        .status-off { color: var(--text-secondary); }
+        
+        /* --- Manager Shift Tabs --- */
+        .shift-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .shift-tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            bottom: -1px;
+        }
+        
+        .shift-tab.active {
+            color: var(--accent-cyan);
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-bottom-color: transparent;
+        }
+        
+        /* --- Machine Detail Page --- */
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .btn-back {
+            padding: 0.6rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            background: transparent;
+            border: 1px solid var(--accent-cyan);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-back:hover {
+            background: var(--accent-cyan);
+            color: var(--bg-dark-blue);
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 1.5rem;
+        }
+        
+        .alert-card {
+            grid-column: 1 / 3;
+            background: rgba(255, 92, 92, 0.1);
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 12px;
+            display: none; /* Hidden by default */
+        }
+        
+        .alert-card.active {
+            display: block;
+        }
+        
+        .graph-card {
+            grid-column: span 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .graph-card.full-width {
+            grid-column: 1 / 3;
+        }
+        
+        .graph-card h3 {
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+        
+        .graph-container {
+            flex-grow: 1;
+            width: 100%;
+            min-height: 250px; /* Taller graphs */
+        }
+        
+        /* --- G-Code Generator Styles --- */
+        .gcode-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        #dropZone {
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+            font-size: 15px;
+            background: rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+        #dropZone.drag {
+            border-color: var(--accent-cyan);
+            background: var(--card-bg);
+            color: var(--accent-cyan);
+        }
+        #progressBar {
+            width: 100%;
+            height: 14px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            margin-top: 16px;
+            overflow: hidden;
+        }
+        #progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+            transition: width 0.3s ease;
+        }
+        pre#codeOutput {
+            background: #020617;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 10px;
+            overflow-y: auto;
+            height: 280px;
+            margin-top: 18px;
+            font-family: monospace;
+            font-size: 13px;
+            border: 1px solid var(--border-color);
+        }
+        #loadingBar {
+            height: 8px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+            width: 0%;
+            border-radius: 8px;
+            transition: width 0.2s linear;
+            margin-top: 8px;
+        }
+        #lineStatus {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            font-size: 14px;
+        }
+        #timer {
+            text-align: center;
+            color: var(--accent-cyan);
+            font-weight: bold;
+            margin-top: 10px;
+            font-size: 15px;
+        }
+        
+        /* --- Responsive Design --- */
+        @media (max-width: 1200px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto;
+            }
+            .graph-card {
+                grid-column: 1 / 2;
+            }
+            .graph-card.full-width {
+                grid-column: 1 / 2;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+            .shell {
+                margin: 0;
+                padding: 1rem;
+            }
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .loginBox {
+                padding: 2rem 1.5rem;
+                width: 90%;
+            }
+        }
+        
+        /* --- NEW: Print Styles for Report Download --- */
+        @media print {
+            body {
+                background: #ffffff;
+                color: #000000;
+                padding: 0;
+            }
+            
+            /* Hide everything except the detail dashboard */
+            .shell > *:not(#machineDetailDash),
+            #app-header,
+            .glow-bg,
+            .btn-back,
+            #download-report-btn,
+            .detail-header div /* Hides the button container */
+            {
+                display: none !important;
+            }
+
+            #machineDetailDash {
+                display: block !important;
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                margin: 0;
+                width: 100%;
+            }
+            
+            .card {
+                box-shadow: none;
+                border: 1px solid #ccc;
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr 1fr; /* Force 2-column layout */
+                gap: 1rem;
+            }
+            
+            .graph-card {
+                border-color: #ccc;
+                background: #fafafa;
+                page-break-inside: avoid; /* Try to keep cards from splitting */
+            }
+            
+            .alert-card {
+                border-color: #cc0000;
+                background: #ffeeee;
+                color: #aa0000;
+                page-break-inside: avoid;
+            }
+            
+            h1, h2, h3, p, div {
+                color: #000000 !important;
+            }
+            
+            .graph-container {
+                 min-height: 250px;
+                 width: 100%;
+                 position: relative;
+            }
+        }
+    </style>
 </head>
+<body>
+    
+    <!-- Background Glow Effect -->
+    <div class="glow-bg"></div>
+
+    <div class="shell">
+
+        <!-- Header Card -->
+        <header id="app-header" class="card hidden">
+            <div class="topbar">
+                <div style="display:flex;gap:12px;align-items:center">
+                    <div>
+                        <h1 style="margin:0">Intelli-Grind</h1>
+                        <div class="sub">Smart Grinding Dashboard</div>
+                    </div>
+                </div>
+                <div id="topControls" style="display:flex; align-items:center; gap: 1rem;">
+                    <div style="text-align: right;">
+                        <div id="header-user-id" style="font-weight: 600; color: var(--text-primary);"></div>
+                        <div id="header-user-role" style="font-size: 0.9rem; color: var(--accent-cyan); text-transform: uppercase;"></div>
+                    </div>
+                    <button id="logout-button" class="btn-logout">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Login Card -->
+        <div id="loginCard" class="loginBox card">
+            <div style="text-align:center; margin-bottom: 1.5rem;">
+                <strong style="color:var(--accent); font-size: 2rem; margin-top: 1.5rem; display: block;">Welcome to Intelli-Grind</strong>
+                <div style="font-size:13px;color:#9fd9ff;margin-top:6px; margin-bottom: 1.5rem;">Enter your username to be routed.</div>
+            </div>
+
+            <input type="text" id="username-input" class="login-input" placeholder="Enter Username">
+            <input type="password" id="password-input" class="login-input" placeholder="Password">
+
+            <div style="text-align:center">
+                <button id="login-button" class="login-button">Login</button>
+                <p id="login-error" class="login-error" style="display:none;">Invalid Username.</p>
+            </div>
+        </div>
+
+        <!-- Worker Dashboard (NOW SKIPPED BY LOGIN) -->
+        <div id="workerDash" class="card hidden">
+            <div class="page-header">
+                <h2 class="page-title">Worker Dashboard</h2>
+            </div>
+            <p class="sub" style="color: var(--text-secondary); margin-top: -1rem; margin-bottom: 1.5rem;">Select a plant to view its machines.</p>
+            <div id="worker-plant-grid" class="grid" style="margin-top:12px; grid-template-columns: 1fr 1fr 1fr;">
+                <!-- Plant tiles added by JS -->
+            </div>
+        </div>
+        
+        <!-- Worker Plant View (NOW THE WORKER'S START PAGE) -->
+        <div id="workerPlantViewDash" class="card hidden">
+            <div class="detail-header">
+                <h2 class="page-title" id="worker-plant-page-title" style="margin-bottom: 0;">Worker: Plant A</h2>
+                <div> <!-- Wrapper for buttons -->
+                    <!-- G-CODE BUTTON MOVED HERE -->
+                    <button id="open-gcode-btn" class="btn">⚙️ G/M Code Generator</button>
+                    <!-- BACK BUTTON IS NOW HIDDEN -->
+                    <button id="back-to-worker-select" class="btn-back hidden">← Back to Plant Selection</button>
+                </div>
+            </div>
+            
+            <div class="shift-tabs" id="worker-shift-tabs">
+                <button class="shift-tab active" data-shift="1">Shift 1</button>
+                <button class="shift-tab" data-shift="2">Shift 2</button>
+                <button class="shift-tab" data-shift="3">Shift 3</button>
+            </div>
+            
+            <div id="worker-machine-tile-grid" class="grid" style="margin-top:14px; grid-template-columns: 1fr 1fr 1fr;">
+                <!-- 3 machine tiles will be dynamically generated here -->
+            </div>
+        </div>
 
 
-<body style="background-color:black; font-family:courier;">
+        <!-- Manager Dashboard (3 Machine Tiles) -->
+        <div id="managerDash" class="card hidden">
+            <div class="detail-header">
+                <h2 class="page-title" id="manager-page-title" style="margin-bottom: 0;">Manager Dashboard: Plant A</h2>
+                <button id="back-to-plant-select" class="btn-back hidden">← Back to Plant Selection</button>
+            </div>
+            
+            <div class="shift-tabs" id="manager-shift-tabs">
+                <button class="shift-tab active" data-shift="1">Shift 1</button>
+                <button class="shift-tab" data-shift="2">Shift 2</button>
+                <button class="shift-tab" data-shift="3">Shift 3</button>
+            </div>
+            
+            <div id="manager-tile-grid" class="grid" style="margin-top:14px; grid-template-columns: 1fr 1fr 1fr;">
+                <!-- 3 manager tiles will be dynamically generated here -->
+            </div>
+        </div>
+        
+        <!-- Machine Detail Page (For Graphs) -->
+        <div id="machineDetailDash" class="card hidden">
+            <div class="detail-header">
+                <h2 class="page-title" id="machine-detail-title" style="margin-bottom: 0;">Machine: Plant_A_01</h2>
+                <!-- BUTTON CONTAINER DIV -->
+                <div>
+                    <button id="back-to-previous-page" class="btn-back">← Back</button>
+                    <!-- DOWNLOAD REPORT BUTTON RESTORED -->
+                    <button id="download-report-btn" class="btn hidden" style="margin-left: 1rem;">Download Report</button>
+                </div>
+            </div>
+            
+            <div class="detail-grid">
+                <div id="machine-detail-alert-box" class="alert-card">
+                    <!-- Alert messages + NEW ACTIONs appear here -->
+                </div>
+                
+                <div class="graph-card">
+                    <h3>Speed (RPM)</h3>
+                    <div class="graph-container">
+                        <canvas id="speed-chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="graph-card">
+                    <h3>Vibration (m/s²)</h3>
+                    <div class="graph-container">
+                        <canvas id="vibration-chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="graph-card full-width">
+                    <h3>Historical Trend (Combined)</h3>
+                    <div class="graph-container">
+                        <canvas id="combined-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plant In-Charge Dashboard (3 Plant Tiles) -->
+        <div id="plantDash" class="card hidden">
+            <div class="page-header">
+                <h2 class="page-title">Plant In-Charge Dashboard</h2>
+            </div>
+            <p class="sub" style="color: var(--text-secondary); margin-top: -1rem; margin-bottom: 1.5rem;">Select a plant to view its Manager Dashboard.</p>
+            <div id="plant-in-charge-grid" class="grid" style="margin-top:12px; grid-template-columns: 1fr 1fr 1fr;">
+                <!-- Plant tiles added by JS -->
+            </div>
+        </div>
+        
+        <!-- G-Code Generator Page -->
+        <div id="gcodeGeneratorPage" class="card hidden">
+            <div class="detail-header">
+                <h2 class="page-title" style="margin-bottom: 0;">G/M Code Generator</h2>
+                <button id="back-to-worker-plant-view" class="btn-back">← Back to Machine View</button>
+            </div>
+            
+            <div class="gcode-container" style="margin-top: 1.5rem;">
+                <div id="dropZone">Drag & Drop your CAD file (.stp / .stl) here<br>or click to browse</div>
+                <input type="file" id="fileInput" accept=".stp,.step,.stl" style="display:none;">
+                <div id="progressBar" class="hidden"><div id="progress"></div></div>
+                <p id="status" style="color:var(--text-secondary);margin-top:10px;">Waiting for upload...</p>
+                <button id="generateBtn" class="btn" onclick="generateGCode()" disabled>Generate G/M Code</button>
+
+                <div id="outputSection" class="hidden">
+                    <h3 style="color:var(--accent-cyan); margin-top: 1.5rem;">Generated G & M Code</h3>
+                    <pre id="codeOutput">[Code will appear here]</pre>
+                    <div id="loadingBar"></div>
+                    <p id="lineStatus">Loading...</p>
+                    <p id="timer">⏱ Time Taken: 0s</p>
+                </div>
+            </div>
+        </div>
+
+    </div> <!-- shell -->
+
+<!-- ======================================================================= -->
+<!-- JAVASCRIPT LOGIC (Graph + Report Button Fixes) -->
+<!-- ======================================================================= -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- CONSTANTS ---
+            const API_URL = "http://51.20.68.215:5000";
+            const DATA_FETCH_INTERVAL = 2000;
+            const ALL_MACHINES = [
+                'Plant_A_01', 'Plant_A_02', 'Plant_A_03',
+                'Plant_B_01', 'Plant_B_02', 'Plant_B_03',
+                'Plant_C_01', 'Plant_C_02', 'Plant_C_03'
+            ];
+            const PLANTS = ['A', 'B', 'C'];
+            
+            // --- STATE ---
+            let appState = {
+                currentPage: 'login',
+                currentUser: null,
+                currentRole: null,
+                currentPlant: null,
+                currentMachine: null,
+                originalUser: null,
+                previousPage: 'login'
+            };
+            let globalDataStore = {};
+            let historicalDataStore = {};
+            let dataFetchInterval = null;
+            let chartObjects = {};
+
+            // --- DOM ELEMENTS ---
+            const appHeader = document.getElementById('app-header');
+            const pages = {
+                login: document.getElementById('loginCard'),
+                worker: document.getElementById('workerDash'),
+                workerPlantView: document.getElementById('workerPlantViewDash'),
+                manager: document.getElementById('managerDash'),
+                machineDetail: document.getElementById('machineDetailDash'),
+                plantInCharge: document.getElementById('plantDash'),
+                gcodeGenerator: document.getElementById('gcodeGeneratorPage')
+            };
+            
+            // Login
+            const usernameInput = document.getElementById('username-input');
+            const loginButton = document.getElementById('login-button');
+            const loginError = document.getElementById('login-error');
+            
+            // Header
+            const headerUserId = document.getElementById('header-user-id');
+            const headerUserRole = document.getElementById('header-user-role');
+            const logoutButton = document.getElementById('logout-button');
+
+            // Worker
+            const workerPlantGrid = document.getElementById('worker-plant-grid');
+            const openGCodeBtn = document.getElementById('open-gcode-btn');
+            
+            // Worker Plant View
+            const workerPlantPageTitle = document.getElementById('worker-plant-page-title');
+            const workerMachineTileGrid = document.getElementById('worker-machine-tile-grid');
+            const backToWorkerSelectButton = document.getElementById('back-to-worker-select');
+            
+            // Manager
+            const managerPageTitle = document.getElementById('manager-page-title');
+            const managerShiftTabs = document.getElementById('manager-shift-tabs');
+            const managerTileGrid = document.getElementById('manager-tile-grid');
+            const backToPlantSelectButton = document.getElementById('back-to-plant-select'); 
+            
+            // Machine Detail
+            const machineDetailTitle = document.getElementById('machine-detail-title');
+            const machineDetailAlertBox = document.getElementById('machine-detail-alert-box');
+            const backToPreviousPageButton = document.getElementById('back-to-previous-page');
+            const downloadReportBtn = document.getElementById('download-report-btn'); // RESTORED
+            
+            // Plant In-Charge
+            const plantInChargeGrid = document.getElementById('plant-in-charge-grid');
+            
+            // G-Code Generator
+            const gcodeOutputSection = document.getElementById('outputSection');
+            const gcodeDropZone = document.getElementById('dropZone');
+            const gcodeFileInput = document.getElementById('fileInput');
+            const gcodeProgress = document.getElementById('progress');
+            const gcodeProgressBar = document.getElementById('progressBar');
+            const gcodeStatus = document.getElementById('status');
+            const gcodeCodeOutput = document.getElementById('codeOutput');
+            const gcodeLoadingBar = document.getElementById('loadingBar');
+            const gcodeLineStatus = document.getElementById('lineStatus');
+            const gcodeTimerEl = document.getElementById('timer');
+            const gcodeGenerateBtn = document.getElementById('generateBtn');
+            const backToWorkerPlantViewButton = document.getElementById('back-to-worker-plant-view');
+            let gcodeSelectedFile = null;
+            let gcodeTimerInterval;
+            
+            
+            // --- DATA FETCHING ---
+
+            async function startDataFetcher() {
+                if (dataFetchInterval) clearInterval(dataFetchInterval);
+                await fetchAllData(); 
+                
+                // *** MODIFIED: New Interval Logic for Graph Fix ***
+                dataFetchInterval = setInterval(async () => {
+                    await fetchAllData();
+                    
+                    if (appState.currentPage === 'gcodeGenerator') return;
+
+                    if (appState.currentPage === 'machineDetail') {
+                        // If on detail page, *only* update the alert box
+                        updateDetailAlertBox();
+                    } else {
+                        // Otherwise, render the current page (which updates tiles)
+                        renderCurrentPage();
+                    }
+                }, DATA_FETCH_INTERVAL);
+                // *** END OF MODIFICATION ***
+            }
+            
+            function stopDataFetcher() {
+                if (dataFetchInterval) clearInterval(dataFetchInterval);
+            }
+
+            async function fetchAllData() {
+                try {
+                    const response = await fetch(`${API_URL}/api/data`);
+                    if (!response.ok) {
+                        console.error("Failed to fetch data from Flask backend");
+                        return;
+                    }
+                    globalDataStore = await response.json();
+                } catch (error) {
+                    console.error("Error fetching data:", error);
+                }
+            }
+            
+            async function fetchHistory(machine_id) {
+                try {
+                    const response = await fetch(`${API_URL}/api/history/${machine_id}`);
+                    if (!response.ok) {
+                        console.error("Failed to fetch history for", machine_id);
+                        return;
+                    }
+                    const history = await response.json();
+                    historicalDataStore[machine_id] = history;
+                    
+                    if (appState.currentPage === 'machineDetail') {
+                        // *** MODIFIED: This now draws the charts ***
+                        renderMachineDetailCharts();
+                    }
+                } catch (error) {
+                    console.error("Error fetching history:", error);
+                }
+            }
+            
+            function initializeDataStore() {
+                globalDataStore = {};
+                for (const machineId of ALL_MACHINES) {
+                    globalDataStore[machineId] = {
+                        id: machineId,
+                        raw_sensors: { speed_rpm: 0, vibration_ms2: 0, ir_present: 0, alignment_mm: 0 },
+                        processed_status: { status_code: "OFFLINE", status_message: "Awaiting data...", tile_color: "grey" }
+                    };
+                }
+            }
 
 
-<div style="text-align:center;">
-  <img src="profile.png" alt="My Photo" style="width:200px; border-radius:100px; margin-top:20px;">
-</div>
+            // --- NAVIGATION & LOGIN ---
 
-<h1 style="text-align:center; font-size:60px;color:limegreen; ">
-PERSONAL PORTFOLIO
-</h1>
+            function showPage(pageId, rememberPrevious = true) {
+                if (rememberPrevious) {
+                    appState.previousPage = appState.currentPage;
+                }
+                appState.currentPage = pageId;
+                
+                for (const id in pages) {
+                    pages[id].classList.add('hidden');
+                }
+                if (pages[pageId]) {
+                    pages[pageId].classList.remove('hidden');
+                }
+                
+                appHeader.classList.toggle('hidden', pageId === 'login');
+                
+                const showPBackButton = (appState.currentRole === 'Plant In-Charge') && pageId === 'manager';
+                backToPlantSelectButton.classList.toggle('hidden', !showPBackButton);
+                
+                // *** MODIFIED: renderCurrentPage() now handles graph fix ***
+                renderCurrentPage();
+            }
 
-<hr>
+            function handleLogin() {
+                const username = usernameInput.value.trim().toUpperCase();
+                loginError.style.display = 'none';
+                
+                let success = false;
+                let targetPage = 'login';
+                
+                if (username.startsWith('W')) {
+                    const plant = username.charAt(1);
+                    if (['A', 'B', 'C'].includes(plant)) {
+                        appState.currentUser = username;
+                        appState.currentRole = 'Worker';
+                        appState.currentPlant = plant;
+                        targetPage = 'workerPlantView';
+                        success = true;
+                    } else {
+                        loginError.textContent = 'Invalid Worker ID. Use format: WA, WB, or WC';
+                    }
 
-<h2 style="font-size:50px; color:limegreen;">About Me</h2>
-<p style="color:white; font-size:20px;"> Well im still figuring that one out man🦇.
-</p>
+                } else if (username.startsWith('M')) {
+                    const plant = username.charAt(1);
+                    if (['A', 'B', 'C'].includes(plant)) {
+                        appState.currentUser = username;
+                        appState.currentRole = 'Manager';
+                        appState.currentPlant = plant;
+                        targetPage = 'manager';
+                        success = true;
+                    } else {
+                        loginError.textContent = 'Invalid Manager ID. Use format: MA, MB, or MC';
+                    }
+                } else if (username.startsWith('P')) {
+                    appState.currentUser = username;
+                    appState.originalUser = username; 
+                    appState.currentRole = 'Plant In-Charge';
+                    targetPage = 'plantInCharge';
+                    success = true;
+                } else {
+                    loginError.textContent = 'Invalid Username. Must start with W, M, or P.';
+                }
+
+                if (success) {
+                    updateHeaderUI();
+                    showPage(targetPage);
+                    startDataFetcher();
+                } else {
+                    loginError.style.display = 'block';
+                }
+            }
+            
+            function handleLogout() {
+                stopDataFetcher(); 
+                appState = {
+                    currentPage: 'login', currentUser: null, currentRole: null,
+                    currentPlant: null, currentMachine: null, originalUser: null,
+                    previousPage: 'login'
+                };
+                usernameInput.value = '';
+                loginError.style.display = 'none';
+                showPage('login');
+            }
+
+            function updateHeaderUI() {
+                headerUserId.textContent = appState.currentUser;
+                headerUserRole.textContent = appState.currentRole;
+            }
+
+            function handleMachineTileClick(event) {
+                const machineId = event.currentTarget.dataset.machineId;
+                if (machineId) {
+                    appState.currentMachine = machineId;
+                    showPage('machineDetail');
+                    fetchHistory(machineId); // This will now trigger chart rendering
+                }
+            }
+
+            function handlePlantTileClick(event) {
+                const plantId = event.currentTarget.dataset.plantId;
+                if (plantId) {
+                    appState.currentPlant = plantId;
+                    
+                    if (appState.currentRole === 'Plant In-Charge') {
+                         appState.currentUser = `${appState.originalUser} (Viewing Plant ${plantId})`;
+                         updateHeaderUI();
+                         showPage('manager');
+                    } else if (appState.currentRole === 'Worker') {
+                        showPage('workerPlantView');
+                    }
+                }
+            }
+            
+            function handleShiftTabClick(event) {
+                const parentTabs = event.currentTarget.parentElement;
+                parentTabs.querySelectorAll('.shift-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                event.currentTarget.classList.add('active');
+            }
+            
+            function handleBackToPreviousPage() {
+                Object.values(chartObjects).forEach(chart => chart.destroy());
+                chartObjects = {};
+                
+                if (appState.currentRole === 'Manager') {
+                    showPage('manager', false);
+                } else if (appState.currentRole === 'Worker') {
+                    showPage('workerPlantView', false);
+                } else { 
+                    showPage('manager', false);
+                }
+            }
+            
+            function handleBackToPlantSelect() {
+                appState.currentUser = appState.originalUser;
+                appState.currentRole = 'Plant In-Charge';
+                updateHeaderUI();
+                showPage('plantInCharge');
+            }
+            
+            function handleBackToWorkerSelect() {
+                showPage('worker');
+            }
 
 
-<hr>
-<div style="display:flex; justify-content:space-around; flex-wrap:wrap; color:white; margin-top:30px;">
-  
-  <div style="flex:1; min-width:300px; margin:10px;">
-    <h2 style="font-size:40px; color:limegreen;">Skills</h2>
-    <ul style="font-size:20px;">
-      <li>Python</li>
-      <li>HTML & CSS</li>
-      <li>MySQL </li>
-      <li>Fusion 360</li>
-      <li>TinkerCad</li>
-      
-    </ul>
-  </div>
+            // --- RENDERING FUNCTIONS ---
 
-  <div style="flex:1; min-width:300px; margin:10px;">
-    <h2 style="font-size:40px; color:limegreen;">Projects</h2>
-    <ul style="font-size:20px;">
-      <li>Automatic Automobile Wiper Interfaced Arduino</li>
-      <li> Red Blood Cell (RBC) Counter using OpenCV </li>
-      <li>Fish BMI estimation using YOLOV4</li>
-    </ul>
-  </div>
+            // *** MODIFIED: renderCurrentPage simplified for Graph Fix ***
+            function renderCurrentPage() {
+                // Destroy charts *only* if leaving the detail page
+                if (appState.currentPage !== 'machineDetail' && Object.keys(chartObjects).length > 0) {
+                    Object.values(chartObjects).forEach(chart => chart.destroy());
+                    chartObjects = {};
+                }
+                
+                if (appState.currentPage === 'gcodeGenerator') {
+                    renderGCodeGenerator();
+                    return;
+                }
+                
+                switch (appState.currentPage) {
+                    case 'worker':
+                        renderPlantSelectDashboard(workerPlantGrid);
+                        break;
+                    case 'plantInCharge':
+                        renderPlantSelectDashboard(plantInChargeGrid);
+                        break;
+                    case 'workerPlantView':
+                        renderWorkerPlantView();
+                        break;
+                    case 'manager':
+                        renderManagerDashboard();
+                        break;
+                    case 'machineDetail':
+                        // On detail page, just update title and alerts
+                        machineDetailTitle.textContent = `Machine: ${appState.currentMachine}`;
+                        updateDetailAlertBox(); // Update alerts from live data
+                        // Show/hide report button based on role
+                        const showReportBtn = appState.currentRole === 'Plant In-Charge';
+                        downloadReportBtn.classList.toggle('hidden', !showReportBtn);
+                        // Charts are now drawn *only* by fetchHistory
+                        break;
+                }
+            }
+            // *** END OF MODIFICATION ***
 
-</div>
+            function renderPlantSelectDashboard(gridElement) {
+                gridElement.innerHTML = '';
+                for (const plantId of PLANTS) {
+                    const tile = document.createElement('div');
+                    tile.className = 'plant-tile';
+                    tile.dataset.plantId = plantId;
+                    tile.innerHTML = `
+                        <h3>Plant ${plantId}</h3>
+                        <div style="color:#9fd9ff">3 machines</div>
+                    `;
+                    tile.addEventListener('click', handlePlantTileClick);
+                    gridElement.appendChild(tile);
+                }
+            }
+            
+            function renderWorkerPlantView() {
+                const plantId = appState.currentPlant;
+                workerPlantPageTitle.textContent = `Worker: Plant ${plantId}`;
+                workerMachineTileGrid.innerHTML = '';
+                
+                for(let i=1; i<=3; i++) {
+                    const machineId = `Plant_${plantId}_0${i}`;
+                    const tile = createMachineTile(machineId);
+                    workerMachineTileGrid.appendChild(tile);
+                }
+            }
+            
+            function renderManagerDashboard() {
+                const plantId = appState.currentPlant;
+                managerPageTitle.textContent = `Manager Dashboard: Plant ${plantId}`;
+                managerTileGrid.innerHTML = '';
+                
+                for(let i=1; i<=3; i++) {
+                    const machineId = `Plant_${plantId}_0${i}`;
+                    const tile = createMachineTile(machineId);
+                    managerTileGrid.appendChild(tile);
+                }
+            }
+            
+            function createMachineTile(machineId) {
+                const data = globalDataStore[machineId];
+                const tile = document.createElement('div');
+                tile.className = 'machine-tile';
+                tile.dataset.machineId = machineId;
+                
+                if (!data || !data.processed_status) {
+                    tile.innerHTML = `<h3>${machineId}</h3><p>Awaiting data...</p>`;
+                    return tile;
+                }
+                
+                const status = data.processed_status;
+                const sensors = data.raw_sensors;
+                
+                const color = status.tile_color;
+                if (color === 'red') tile.classList.add('tile-alert-red');
+                if (color === 'yellow') tile.classList.add('tile-alert-yellow');
+                if (color === 'grey') tile.classList.add('tile-alert-grey');
+                
+                let statusText = status.status_message;
+                let statusClass = 'status-ok';
+                if (color === 'red') statusClass = 'status-bad';
+                if (color === 'yellow') statusClass = 'status-warn';
+                if (color === 'grey') statusClass = 'status-off';
 
-<div style="text-align: center; margin-top: 20px;">
-	<a href="resume.pdf" download>
-  	<button style="padding: 10px 20px; font-size: 18px; background-color: limegreen; color: white; border: none; border-radius: 5px;">
-    Download Resume
-  </button>
-	</a>
-</div>
-<h2 style="font-size:50px; color:limegreen;">Contact</h2>
-<ul style="color:white; font-size:20px;">
-	<li>Email: <a href="mailto:mvbaladithya@gmail.com" style="color:white;">📧</a></li>
-	<li>GitHub: <a href="https://github.com/Bala-17122003" style="color:lightgreen;">👻</a></li>
-	<li>Linked IN: <a href="https://www.linkedin.com/in/baladithya-m-v-5b192b248/;">👍🏿 </a></li>
-  </ul>
+                tile.innerHTML = `
+                    <h3>${machineId}</h3>
+                    <div class="kv">
+                        <div>Status</div>
+                        <div class="big ${statusClass}">${statusText}</div>
+                    </div>
+                    <div class="kv">
+                        <div>Speed (RPM)</div>
+                        <div class="big">${sensors.speed_rpm}</div>
+                    </div>
+                    <div class="kv">
+                        <div>Vibration (m/s²)</div>
+                        <div class="big">${sensors.vibration_ms2}</div>
+                    </div>
+                `;
+                
+                tile.addEventListener('click', handleMachineTileClick);
+                return tile;
+            }
+            
+            // *** NEW FUNCTION: To update alert box from live data ***
+            function updateDetailAlertBox() {
+                const machineId = appState.currentMachine;
+                if (!machineId) return; // Guard
+                
+                const data = globalDataStore[machineId];
+                if (!data || !data.processed_status) {
+                     machineDetailAlertBox.classList.remove('active');
+                     return;
+                }
 
+                const status = data.processed_status;
+                if (status.tile_color === 'red' || status.tile_color === 'yellow') {
+                    
+                    const alertMessage = status.status_message;
+                    let solutionText = '';
+                    
+                    if (alertMessage.toLowerCase().includes('speed')) {
+                        solutionText = '<strong style="color: var(--text-primary);">ACTION:</strong> Control the speed to ideal value 1500 RPM.';
+                    } else if (alertMessage.toLowerCase().includes('motor problem')) {
+                        solutionText = '<strong style="color: var(--text-primary);">ACTION:</strong> Need a proactive maintenance for motor';
+                    } else if (alertMessage.toLowerCase().includes('align')) {
+                        solutionText = '<strong style="color: var(--text-primary);">ACTION:</strong> Align the tool near the workpiece.';
+                    } else if (alertMessage.toLowerCase().includes('workpiece not present')) {
+                        solutionText = '<strong style="color: var(--text-primary);">ACTION:</strong> Place a workpiece to start the work.';
+                    } else {
+                        solutionText = '<strong style="color: var(--text-primary);">ACTION:</strong> Please check the machine immediately.';
+                    }
+                    
+                    machineDetailAlertBox.innerHTML = `<p>ALERT: ${alertMessage}</p>
+                        <p style="margin-top: 0.5rem; font-weight: 400;">${solutionText}</p>`;
+                        
+                    machineDetailAlertBox.classList.add('active');
+                    machineDetailAlertBox.style.borderColor = status.tile_color === 'red' ? 'var(--accent-red)' : 'var(--accent-yellow)';
+                    machineDetailAlertBox.style.color = status.tile_color === 'red' ? 'var(--accent-red)' : 'var(--accent-yellow)';
+                    machineDetailAlertBox.style.background = status.tile_color === 'red' ? 'rgba(255, 92, 92, 0.1)' : 'rgba(240, 246, 110, 0.1)';
+                
+                } else {
+                    machineDetailAlertBox.classList.remove('active');
+                }
+            }
+            
+            // *** NEW FUNCTION: Renders charts just once from history ***
+            function renderMachineDetailCharts() {
+                const machineId = appState.currentMachine;
+                const history = historicalDataStore[machineId];
+                
+                // Clear old charts if any (should be handled by back button, but good check)
+                if (Object.keys(chartObjects).length > 0) {
+                     Object.values(chartObjects).forEach(chart => chart.destroy());
+                     chartObjects = {};
+                }
 
+                if (!history || history.length === 0) {
+                    console.error("No history data to display for", machineId);
+                    return; // No data, don't draw
+                }
+                
+                const labels = history.map(d => new Date(d.timestamp));
+                const speedData = history.map(d => d.raw_sensors.speed_rpm);
+                const vibData = history.map(d => d.raw_sensors.vibration_ms2);
+
+                drawChart('speed-chart', 'Speed (RPM)', labels, speedData, '#00eaff');
+                drawChart('vibration-chart', 'Vibration (m/s²)', labels, vibData, '#f0f66e');
+                drawCombinedChart('combined-chart', labels, speedData, vibData);
+            }
+            
+            // --- Chart.js Drawing Functions ---
+            const chartConfig = {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: { unit: 'second', displayFormats: { second: 'HH:mm:ss' } },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: '#9fd9ff' }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: '#9fd9ff' }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            };
+
+            function drawChart(canvasId, label, labels, data, color) {
+                const ctx = document.getElementById(canvasId);
+                if (!ctx) return;
+                
+                // This function now *only creates* charts
+                if (chartObjects[canvasId]) {
+                   chartObjects[canvasId].destroy(); // Destroy if somehow exists
+                }
+                
+                chartObjects[canvasId] = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: label,
+                            data: data,
+                            borderColor: color,
+                            backgroundColor: color + '33',
+                            fill: true,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.3
+                        }]
+                    },
+                    options: { 
+                        ...chartConfig, 
+                        plugins: { 
+                            ...chartConfig.plugins, 
+                            title: { 
+                                display: true, 
+                                text: label, 
+                                color: '#e6f7ff' 
+                            } 
+                        } 
+                    }
+                });
+            }
+
+            function drawCombinedChart(canvasId, labels, speedData, vibData) {
+                const ctx = document.getElementById(canvasId);
+                if (!ctx) return;
+                
+                if (chartObjects[canvasId]) {
+                   chartObjects[canvasId].destroy();
+                }
+                
+                chartObjects[canvasId] = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Speed (RPM)',
+                                data: speedData,
+                                borderColor: '#00eaff',
+                                borderWidth: 2,
+                                pointRadius: 0,
+                                yAxisID: 'ySpeed'
+                            },
+                            {
+                                label: 'Vibration (m/s²)',
+                                data: vibData,
+                                borderColor: '#f0f66e',
+                                borderWidth: 2,
+                                pointRadius: 0,
+                                yAxisID: 'yVib'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: { unit: 'second', displayFormats: { second: 'HH:mm:ss' } },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: '#9fd9ff' }
+                            },
+                            ySpeed: {
+                                position: 'left',
+                                grid: { color: 'rgba(0, 234, 255, 0.1)' },
+                                ticks: { color: '#00eaff' },
+                                title: { display: true, text: 'Speed (RPM)', color: '#00eaff' }
+                            },
+                            yVib: {
+                                position: 'right',
+                                grid: { display: false },
+                                ticks: { color: '#f0f66e' },
+                                title: { display: true, text: 'Vibration (m/s²)', color: '#f0f66e' }
+                            }
+                        },
+                        plugins: {
+                            title: { display: true, text: 'Historical Trend Graph', color: '#e6f7ff' },
+                            legend: { labels: { color: '#e6f7ff' } }
+                        }
+                    }
+                });
+            }
+            
+            // --- G-CODE GENERATOR FUNCTIONS ---
+            
+            function renderGCodeGenerator() {
+                gcodeSelectedFile = null;
+                gcodeStatus.textContent = 'Waiting for upload...';
+                gcodeGenerateBtn.disabled = true;
+                gcodeDropZone.textContent = 'Drag & Drop your CAD file (.stp / .stl) here<br>or click to browse';
+gcodeOutputSection.classList.add('hidden');
+                gcodeProgressBar.classList.add('hidden');
+                gcodeProgress.style.width = '0%';
+            }
+            
+            function selectGCodeFile(f) {
+                gcodeSelectedFile = f;
+                gcodeStatus.textContent = `Selected file: ${f.name}`;
+                gcodeGenerateBtn.disabled = false;
+                gcodeDropZone.textContent = `Selected: ${f.name}`;
+            }
+
+            window.generateGCode = function() { // Attached to window for HTML onclick
+                if (!gcodeSelectedFile) return alert('Please select a CAD file');
+                gcodeStatus.textContent = 'Uploading to cloud...';
+                gcodeGenerateBtn.disabled = true;
+                gcodeProgressBar.classList.remove('hidden');
+                let progressValue = 0;
+                const duration = 12000;
+                const stepTime = 300;
+                const increment = 100 / (duration / stepTime);
+
+                const interval = setInterval(() => {
+                    progressValue += increment;
+                    gcodeProgress.style.width = Math.min(progressValue, 100) + '%';
+                    gcodeStatus.textContent = `Processing... ${Math.floor(progressValue)}%`;
+                    if (progressValue >= 100) {
+                        clearInterval(interval);
+                        showGeneratedCode();
+                    }
+                }, stepTime);
+            }
+
+            function randomizeCode() {
+                const patterns = [
+                    ["G01 X10 Z-20", "M03 S1200", "G01 X30 Z-40", "M05"],
+                    ["G00 X0 Y0", "M03 S1500", "G01 X50 Y25 F80", "M05"],
+                    ["T03 M06", "G02 X10 Y10 I5 J5", "M03 S1000", "M05"]
+                ];
+                const choice = patterns[Math.floor(Math.random() * patterns.length)];
+                return choice;
+            }
+
+            function showGeneratedCode() {
+                gcodeProgressBar.classList.add('hidden');
+                gcodeOutputSection.classList.remove('hidden');
+                const randomExtra = randomizeCode();
+                const codeLines = [
+                    "%",
+                    "(Auto-generated G/M Code for " + gcodeSelectedFile.name + ")",
+                    "G21 (mm mode)",
+                    "G90 (absolute coordinates)",
+                    "T01 M06 (Select Tool 1 - Roughing)",
+                    ...randomExtra,
+                    "T02 M06 (Select Tool 2 - Finishing)",
+                    "M03 S1500",
+                    "G01 X25 Z0 F80",
+                    "M05",
+                    "G00 X0 Z50",
+                    "M30 (End of program)",
+                    "%"
+                ];
+
+                gcodeCodeOutput.textContent = "";
+                let index = 0;
+                let seconds = 0;
+                gcodeLoadingBar.style.width = "0%";
+                gcodeLineStatus.textContent = "Running G/M Code...";
+                gcodeTimerEl.textContent = "⏱ Time Taken: 0s";
+
+                clearInterval(gcodeTimerInterval);
+                gcodeTimerInterval = setInterval(() => {
+                    seconds++;
+                    gcodeTimerEl.textContent = `⏱ Time Taken: ${seconds}s`;
+                }, 1000);
+
+                const total = codeLines.length;
+                const simulate = setInterval(() => {
+                    if (index < total) {
+                        gcodeCodeOutput.textContent += codeLines[index] + "\n";
+                        index++;
+                        const progress = Math.round((index / total) * 100);
+                        gcodeLoadingBar.style.width = progress + "%";
+                        gcodeLineStatus.textContent = `Running line ${index} of ${total}`;
+                    } else {
+                        clearInterval(simulate);
+                        clearInterval(gcodeTimerInterval);
+                        gcodeLineStatus.textContent = "Execution Complete ✅";
+                    }
+                }, 600);
+            }
+
+            // --- INITIALIZATION ---
+            
+            loginButton.addEventListener('click', handleLogin);
+            usernameInput.addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') handleLogin();
+            });
+            
+            logoutButton.addEventListener('click', handleLogout);
+            
+            plantInChargeGrid.querySelectorAll('.plant-tile').forEach(tile => {
+                tile.addEventListener('click', handlePlantTileClick);
+            });
+            
+            workerPlantGrid.addEventListener('click', (e) => {
+                const tile = e.target.closest('.plant-tile');
+                if (tile) {
+                    handlePlantTileClick(e);
+                }
+            });
+            
+            managerShiftTabs.querySelectorAll('.shift-tab').forEach(tab => {
+                tab.addEventListener('click', handleShiftTabClick);
+            });
+            
+            document.querySelectorAll('#worker-shift-tabs .shift-tab').forEach(tab => {
+                tab.addEventListener('click', handleShiftTabClick);
+            });
+            
+            backToPreviousPageButton.addEventListener('click', handleBackToPreviousPage);
+            backToPlantSelectButton.addEventListener('click', handleBackToPlantSelect);
+            
+            // DOWNLOAD REPORT BUTTON LISTENER
+            downloadReportBtn.addEventListener('click', () => {
+                window.print();
+            });
+            
+            // G-Code Listeners
+            openGCodeBtn.addEventListener('click', () => showPage('gcodeGenerator'));
+            backToWorkerPlantViewButton.addEventListener('click', () => showPage('workerPlantView'));
+            gcodeDropZone.addEventListener('click', () => gcodeFileInput.click());
+            gcodeFileInput.addEventListener('change', e => selectGCodeFile(e.target.files[0]));
+            gcodeDropZone.addEventListener('dragover', e => { e.preventDefault(); gcodeDropZone.classList.add('drag'); });
+            gcodeDropZone.addEventListener('dragleave', () => gcodeDropZone.classList.remove('drag'));
+            gcodeDropZone.addEventListener('drop', e => {
+                e.preventDefault();
+                gcodeDropZone.classList.remove('drag');
+                const f = e.dataTransfer.files[0];
+                if (f) selectGCodeFile(f);
+            });
+
+            initializeDataStore();
+            showPage('login');
+        });
+    </script>
 </body>
 </html>
